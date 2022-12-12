@@ -1,12 +1,14 @@
 from machine import Pin, I2C, PWM
-from ssd1306 import SSD1306_I2C
+from lcd_api import LcdApi
+from pico_i2c_lcd import I2cLcd
 import utime
 
-WIDTH = 128
-HEIGHT = 64
+I2C_ADDR     = 0x27
+I2C_NUM_ROWS = 4
+I2C_NUM_COLS = 20
 
-i2c = I2C(0, scl = Pin(17), sda = Pin(16), freq=400000)
-display = SSD1306_I2C(WIDTH, HEIGHT, i2c)
+i2c = I2C(0, sda=machine.Pin(0), scl=machine.Pin(1), freq=400000)
+lcd = I2cLcd(i2c, I2C_ADDR, I2C_NUM_ROWS, I2C_NUM_COLS)
 
 trigger = Pin(21, Pin.OUT)
 echo = Pin(20, Pin.IN)
@@ -40,26 +42,25 @@ def ultra():
    
    return str(distance)
 
+   if distance < 10:
+       led2.value(1)
+   else:
+       led2.value(0)
+
 led1 = Pin(18,Pin.OUT)
 led2 = Pin(13,Pin.OUT)
 
-print("fok")
-ngf = ultra()
-print(ngf)
 
 while True:
-    led1.value(1)
     led2.value(1)
-    
-    display.text(ultra(),0,0)
-    #display.text("cm",2,5)
-    display.show()
-    display.fill(0)
-    utime.sleep(0)
+    lcd.clear()
+    lcd.move_to(0,0)
+    lcd.putstr("Distance: "+ultra()+"cm")
+    utime.sleep(0.5)
     
     pwm.duty_ns(MIN)
     utime.sleep(0)
     pwm.duty_ns(MID)
-    utime.sleep(1)
+    utime.sleep(0.5)
     pwm.duty_ns(MAX)
-    utime.sleep(1)
+    utime.sleep(0.5)
